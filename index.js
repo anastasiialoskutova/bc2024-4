@@ -17,7 +17,7 @@ const options = program.opts();
 
 // Перевірка на обов'язкові параметри
 if (!options.host || !options.port || !options.cache) {
-  console.error('Всі параметри (host, port, cache) є обов\'язковими.');
+  console.error('All parameters (host, port, cache) are necessary.');
   process.exit(1);
 }
 
@@ -33,10 +33,10 @@ const server = http.createServer(async (req, res) => {
     } catch (error) {
       if (error.code === 'ENOENT') {
         res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Не знайдено');
+        res.end('Not found');
       } else {
         res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Внутрішня помилка сервера');
+        res.end('Internal server mistake');
       }
     }
   } else if (req.method === 'PUT') {
@@ -53,7 +53,22 @@ const server = http.createServer(async (req, res) => {
             res.end('Internal Server Error');
         }
     });
-} else {
+}else if (req.method === 'DELETE') {
+  try {
+      await fs.unlink(filePath);
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('Deleted');
+  } catch (error) {
+      if (error.code === 'ENOENT') {
+          res.writeHead(404, { 'Content-Type': 'text/plain' });
+          res.end('Not Found');
+      } else {
+          res.writeHead(500, { 'Content-Type': 'text/plain' });
+          res.end('Internal Server Error');
+      }
+  }
+} 
+else {
     res.writeHead(405, { 'Content-Type': 'text/plain' });
     res.end('Method Not Allowed');
 }

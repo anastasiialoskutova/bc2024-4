@@ -1,36 +1,52 @@
+// index.js
 const http = require('http');
+const fs = require('fs').promises; // Використовуємо fs.promises
+const path = require('path');
 const { Command } = require('commander');
+
 const program = new Command();
 
-// Налаштування командного рядка
 program
   .requiredOption('-h, --host <host>', 'адреса сервера')
   .requiredOption('-p, --port <port>', 'порт сервера')
-  .requiredOption('-c, --cache <cache>', 'шлях до директорії для кешування');
+  .requiredOption('-c, --cache <cache>', 'шлях до директорії для закешованих файлів');
 
 program.parse(process.argv);
 
-// Отримання значень аргументів
-const { host, port, cache } = program.opts();
+const options = program.opts();
 
-console.log(`Host: ${host}`);
-console.log(`Port: ${port}`);
-console.log(`Cache directory: ${cache}`);
+// Перевірка на обов'язкові параметри
+if (!options.host || !options.port || !options.cache) {
+  console.error('Всі параметри (host, port, cache) є обов\'язковими.');
+  process.exit(1);
+}
 
-// Створення HTTP сервера
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-  res.end('Server is working\n');
+const server = http.createServer(async (req, res) => {
+  const urlPath = req.url.split('/')[1]; // Отримуємо код статусу з URL
+  const filePath = path.join(options.cache, `${urlPath}.jpg`); // Формуємо шлях до файлу
+
+  if (req.method === 'GET') {
+    try {
+      const image = await fs.readFile(filePath);
+      res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+      res.end(image);
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('Не знайдено');
+      } else {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('Внутрішня помилка сервера');
+      }
+    }
+  } else {
+    res.writeHead(405, { 'Content-Type': 'text/plain' });
+    res.end('Метод не дозволений');
+  }
 });
 
 // Запуск сервера
-server.listen(port, host, () => {
-  console.log(`Сервер запущено за адресою http://${host}:${port}/`);
-  console.log(`Кеш файли знаходяться в: ${cache}`);
+server.listen(options.port, options.host, () => {
+  console.log(`Сервер запущено на http://${options.host}:${options.port}`);
 });
 
-// Обробка помилок
-server.on('error', (err) => {
-  console.error('Помилка сервера:', err);
-});

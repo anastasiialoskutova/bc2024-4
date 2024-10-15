@@ -4,7 +4,7 @@
   "description": "��#\u0000 \u0000b\u0000c\u00002\u00000\u00002\u00004\u0000-\u00004\u0000\r\u0000 \u0000",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "nodemon index.js"     
   },
   "author": "",
   "license": "ISC",
@@ -16,3 +16,4 @@
     "nodemon": "^3.1.7"
   }
 }
+

@@ -39,10 +39,26 @@ const server = http.createServer(async (req, res) => {
         res.end('Внутрішня помилка сервера');
       }
     }
-  } else {
+  } else if (req.method === 'PUT') {
+    let body = [];
+
+    req.on('data', chunk => body.push(chunk));
+    req.on('end', async () => {
+        try {
+            await fs.writeFile(filePath, Buffer.concat(body));
+            res.writeHead(201, { 'Content-Type': 'text/plain' });
+            res.end('Created');
+        } catch (error) {
+            res.writeHead(500, { 'Content-Type': 'text/plain' });
+            res.end('Internal Server Error');
+        }
+    });
+} else {
     res.writeHead(405, { 'Content-Type': 'text/plain' });
-    res.end('Метод не дозволений');
-  }
+    res.end('Method Not Allowed');
+}
+
+   
 });
 
 // Запуск сервера

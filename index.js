@@ -32,11 +32,19 @@ const server = http.createServer(async (req, res) => {
       res.end(image);
     } catch (error) {
       if (error.code === 'ENOENT') {
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('Not found');
-      } else {
-        res.writeHead(500, { 'Content-Type': 'text/plain' });
-        res.end('Internal server mistake');
+try {
+const response = await superagent.get(`https://http.cat/${httpCode}`);
+const imageBuffer = response.body;
+await fs.writeFile(filePath, imageBuffer);
+res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+res.end(imageBuffer);
+} catch (fetchError) {
+res.writeHead(404, { 'Content-Type': 'text/plain' });
+res.end('Not Found');
+}
+} else {
+res.writeHead(500, { 'Content-Type': 'text/plain' });
+res.end('Internal Server Error');
       }
     }
   } else if (req.method === 'PUT') {
